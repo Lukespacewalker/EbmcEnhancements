@@ -1,29 +1,75 @@
 // ==UserScript==
-// @namespace     https://openuserjs.org/users/lukespacewalker
-// @name          Transform EKG
-// @description   Add copy EKG butto on ebmc.bdms.ac.th
-// @copyright     2025, lukespacewalker (https://openuserjs.org/users/lukespacewalker)
+// @namespace     https://github.com/lukespacewalker
+// @name          EBMC Enhancement: Transform EKG
+// @author        Suttisak Denduangchai
+// @description   Add copy EKG button ebmc.bdms.ac.th
+// @copyright     2025, Suttisak Denduangchai (https://github.com/lukespacewalker)
 // @license       MIT
-// @version       1.0.0
-// @include       https://ebmc.bdms.ac.th/*
-// @require       transformEkg.js
+// @version       1.0.3
+// @include       https://ebmc.bdms.co.th/*
 // @grant         GM_addStyle
 // ==/UserScript==
 
-// ==OpenUserJS==
-// @author lukespacewalker
-// ==/OpenUserJS==
+/* 
+Configuration
+*/
 
+// Maximum number of iterations to prevent infinite loops
+const MAX_ITERATION = 10;
+
+/*
+Library function: TransformEKG
+*/
 /**
-  *
-  * Please begin typing or paste your User script now.
-  *
-  * NOTE: It is still strongly recommended to use the Author Tools panel to
-  *       add your `@updateURL` even if we are not in lockdown.
-  *
-  */
+ * Transform EKG input string into an array of strings.
+ * @param {string} input
+ * @returns {string[]}
+ **/
+function TransformEKG(input) {
+    const inputs = input.split(/\r?\n/);
+    if (inputs.length < 0) return;
 
-(function () {
+    let elements = [];
+
+    let currentElementStartingLineNumber = 0;
+    let currentElementEndingLineNumber = 0;
+
+
+    let iteration = 0;
+    while (iteration < MAX_ITERATION) {
+        let elementName = inputs[currentElementStartingLineNumber];
+        // Find the boundary of element by using elementName
+        for (
+            let lineNumber = currentElementStartingLineNumber;
+            lineNumber < inputs.length;
+            lineNumber++
+        ) {
+            if (inputs[lineNumber].includes(`${elementName}-`)) {
+                currentElementEndingLineNumber = lineNumber;
+                break; // stop searching
+            }
+        }
+
+        let text = inputs[currentElementStartingLineNumber + 1];
+        text = text.replace(/\s+/g, " ");
+        text = text.replace(/^-|-$/g, "");
+        elements.push(text);
+
+        currentElementEndingLineNumber = currentElementStartingLineNumber =
+            currentElementEndingLineNumber + 1;
+
+        iteration++;
+        if (currentElementEndingLineNumber + 1 >= inputs.length) break; // entire string has been processed. break the while loop
+    }
+
+    return elements;
+}
+
+/*
+  Styles functions
+*/
+
+function addStyles() {
     'use strict';
 
     GM_addStyle(`
@@ -41,7 +87,12 @@
   background-color: #0056b3;
 }
     `);
-})();
+}
+
+
+/*
+  Main function to add the button
+*/
 
 function addCopyButton() {
     // 1. Check if the page has "EKG" word in it
@@ -100,9 +151,15 @@ function addCopyButton() {
     targetLabel.appendChild(button);
 }
 
-// Run when DOM is ready
+/*
+    Run the main function on DOMContentLoaded
+*/
 if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", addCopyButton);
+    document.addEventListener("DOMContentLoaded", () => {
+        addCopyButton();
+        addStyles();
+    });
 } else {
     addCopyButton();
+    addStyles();
 }
