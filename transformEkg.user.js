@@ -1,13 +1,15 @@
 // ==UserScript==
 // @namespace     https://github.com/lukespacewalker
-// @name          EBMC Enhancement: Transform EKG
+// @name          EBMC Enhancement
 // @author        Suttisak Denduangchai
-// @description   Add copy EKG button ebmc.bdms.ac.th
+// @description   Transform EKG results, fix PAC links, and enhance DocView/PAC access for EST, ABI, and ECHO.
 // @copyright     2025, Suttisak Denduangchai (https://github.com/lukespacewalker)
 // @license       MIT
-// @version       1.0.3
+// @version       1.0.8
 // @include       https://ebmc.bdms.co.th/*
 // @grant         GM_addStyle
+// @downloadURL https://update.greasyfork.org/scripts/559063/EBMC%20Enhancement%3A%20Transform%20EKG.user.js
+// @updateURL https://update.greasyfork.org/scripts/559063/EBMC%20Enhancement%3A%20Transform%20EKG.meta.js
 // ==/UserScript==
 
 /* 
@@ -94,6 +96,67 @@ function addStyles() {
   Main function to add the button
 */
 
+let hn = null;
+let userName = null;
+
+function findInformation() {
+    try {
+        userName = document.querySelector(".pro-user-name").firstChild.data.trim()
+        hn = Array.from(Array.from(document.querySelectorAll("div")).filter(e => e.innerText.includes("HN :") && e.innerText.includes("VN :")).at(-1).childNodes).find(n => n.nodeType == Node.TEXT_NODE && n.data.includes("HN")).nextSibling.innerText
+    }
+    catch (Exception) { }
+}
+
+function fixPACButton() {
+    // Find Anchor
+    let anchors = document.querySelectorAll('a[href*="10.1.102.108"]')
+    for (let anchor of anchors) {
+        anchor.href = anchor.href.replace("User=BHT", `User=${userName}`)
+        anchor.href = anchor.href.replace("Password=BHT", "Password=risbgh")
+    }
+}
+
+function fixDocviewButton() {
+    let docview = document.querySelector('a[href*="dscanweb.bdms.co.th"]')
+    if (docview == null) {
+        return
+    }
+    docview.href = docview.href.replace("/docview/", "/")
+}
+
+function addDocviewLinkToABIandEcho() {
+    let innerHtml = `
+    <a data-toggle="tooltip" data-original-title="DMS Link" href="https://dscanweb.bdms.co.th/main.aspx?hn=${hn}" target="_blank" style="color: #C6D402"><i class="fas fa-folder-open"></i> DMS</a>
+    `
+    let estContainer = document.querySelector("#nav-exercise_stress_test")?.querySelector('.custom-control')?.parentElement
+    let abiControl = document.querySelector("#nav-abi")?.querySelector('.custom-control')
+    let abiContainer = abiControl?.parentElement
+    if (estContainer != null) {
+        estContainer.style.display = "flex"
+        estContainer.insertAdjacentHTML("beforeend", innerHtml)
+    }
+    if (abiContainer != null) {
+        abiContainer.insertAdjacentHTML("afterbegin", `<div class="col-md-12" style="display:flex"></div>`)
+        abiContainer = abiContainer.childNodes[0]
+        abiContainer.style.display = "flex"
+        abiContainer.append(abiControl)
+        abiContainer.insertAdjacentHTML("beforeend", innerHtml)
+    }
+}
+
+function addPACLinkToEcho() {
+    let echoContainer = document.querySelector("#nav-echocardiography")?.querySelector('.custom-control')?.parentElement
+    if (echoContainer == null) {
+        return;
+    }
+    let formattedHn = hn.replace("-", "")
+    let innerHtml = `
+    <a href="http://10.1.102.108/DicomWeb/DicomWeb.dll/OpenImage?User=${userName}&amp;Password=risbgh&amp;PTNID=${formattedHn}" target="_blank" style="margin-left:10px;"><i class="fas fa-file-medical"></i> PACS</a>
+    `
+    echoContainer.style.display = "flex"
+    echoContainer.insertAdjacentHTML("beforeend", innerHtml)
+}
+
 function addCopyButton() {
     // 1. Check if the page has "EKG" word in it
     if (!(document.body.innerText.includes("EKG") && document.body.innerText.includes("Result Text"))) {
@@ -151,15 +214,21 @@ function addCopyButton() {
     targetLabel.appendChild(button);
 }
 
+function main() {
+    findInformation();
+    addCopyButton();
+    fixDocviewButton();
+    fixPACButton();
+    addDocviewLinkToABIandEcho();
+    addPACLinkToEcho();
+    addStyles();
+}
+
 /*
     Run the main function on DOMContentLoaded
 */
 if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => {
-        addCopyButton();
-        addStyles();
-    });
+    document.addEventListener("DOMContentLoaded", main);
 } else {
-    addCopyButton();
-    addStyles();
+    main();
 }
