@@ -5,7 +5,7 @@
 // @description   Transform EKG results, fix PAC links, and enhance DocView/PAC access for EST, ABI, and ECHO.
 // @copyright     2025, Suttisak Denduangchai (https://github.com/lukespacewalker)
 // @license       MIT
-// @version       1.0.10
+// @version       1.0.11
 // @include       https://ebmc.bdms.co.th/*
 // @grant         GM_addStyle
 // @downloadURL https://update.greasyfork.org/scripts/559063/EBMC%20Enhancement.user.js
@@ -94,9 +94,9 @@ display:none!important;
 }
 
 #section_lab{
-boder:none!important;
-margin:none!important;
-padding:none!important;
+border:none!important;
+margin:0!important;
+padding:0!important;
 }
     `);
 }
