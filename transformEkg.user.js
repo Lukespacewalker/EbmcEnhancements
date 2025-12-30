@@ -5,7 +5,7 @@
 // @description   Transform EKG results, fix PAC links, and enhance DocView/PAC access for EST, ABI, and ECHO.
 // @copyright     2025, Suttisak Denduangchai (https://github.com/lukespacewalker)
 // @license       MIT
-// @version       1.0.11
+// @version       1.0.13
 // @include       https://ebmc.bdms.co.th/*
 // @grant         GM_addStyle
 // @downloadURL https://update.greasyfork.org/scripts/559063/EBMC%20Enhancement.user.js
@@ -98,6 +98,25 @@ border:none!important;
 margin:0!important;
 padding:0!important;
 }
+
+#section_lab .row:nth-child(2){
+display:none!important;
+}
+
+
+.enlarged .left-side-menu #sidebar-menu>ul>li>a{
+    padding: 15px 4px!important;
+}
+#sidebar-menu>ul>li>a{
+    padding: 13px 4px!important;
+}
+.enlarged .left-side-menu{
+width: 40px !important;
+}
+
+.enlarged .content-page {
+    margin-left: 40px !important;
+}
     `);
 }
 
@@ -119,13 +138,17 @@ function findInformation() {
 
 function removeTrash() {
     let trashAnchors = []
-    trashAnchors.push(document.querySelector("#checkicon_questionnaire").parentElement)
-    trashAnchors.push(document.querySelector("#checkicon_muscle_BHQ").parentElement)
+    trashAnchors.push(document.querySelector("#checkicon_questionnaire")?.parentElement)
+    trashAnchors.push(document.querySelector("#checkicon_muscle_BHQ")?.parentElement)
 
     for (let trash of trashAnchors) {
-        trash.parentElement.removeChild(trash)
+        trash?.parentElement?.removeChild(trash)
+        // catch(Exception){}
+        
     }
     document.querySelector("#patient_information_link")?.parentElement?.remove()
+
+    document.querySelector("#menu")?.remove()
 }
 
 function fixPACButton() {
@@ -252,6 +275,22 @@ function main() {
     addStyles();
 
     removeTrash();
+
+    document.body.classList.add("enlarged");
+
+    unsafeWindow.$.App.prototype.initLayout = function(){}
+    unsafeWindow.$.App.initLayout = function(){}
+/*
+    unsafeWindow.App.prototype.initLayout = function () {
+        // in case of small size, add class enlarge to have minimal menu
+        if (this.$window.innerWidth >= 768 && this.$window.innerWidth <= 1028) {
+            this.$body.addClass('enlarged');
+        } else {
+            if (this.$body.data('keep-enlarged') != true) {
+                this.$body.removeClass('enlarged');
+            }
+        }
+    }*/
 }
 
 /*
